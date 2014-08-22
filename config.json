@@ -1,0 +1,8 @@
+{
+    “target.apk": [
+        {
+            "path": "lib",
+            "leve": "L1"
+        }
+    ]
+}
