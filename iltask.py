@@ -1,4 +1,4 @@
-import sys, os, shutil, json, subprocess, ilcommand
+import sys, os, shutil, json, subprocess, commands, ilcommand
 from ilzip import ilzip
 from ilelf import ilelf
 
@@ -13,6 +13,7 @@ class iltask(object):
         self.var['toolchain'] = toolchain
         self.var['targetdir'] = os.path.join(taskdir, 'target')
         self.var['configdir'] = os.path.join(taskdir,'config')
+        self.var['logdir'] = os.path.join(taskdir, 'log')
         self.var['tmp'] = os.path.join(taskdir, 'tmp')
         self.var['target'] = target
         self.var['config'] = config
@@ -23,6 +24,7 @@ class iltask(object):
             os.mkdir(self.var['dir'])
             os.mkdir(self.var['targetdir'])
             os.mkdir(self.var['configdir'])
+            os.mkdir(self.var['logdir'])   
             os.mkdir(self.var['tmp'])
             
             t = ilzip(self.var['target'], self.var['targetdir'])
@@ -124,17 +126,24 @@ class iltask(object):
             args = args.replace('$DIR', self.var['toolchain'])
             args = args.replace('$MACHINE', machine)
             args = args.replace('$TARGET', target)
-            self.pack3(toolchain, args)
+            self.pack3(toolchain, args, target)
         except BaseException, e:
             print e
         finally:
             pass
         
-    def pack3(self, tool, args):
+    def pack3(self, tool, args, target):
         try:
+	    f = open(os.path.join(self.var['logdir'], 'log.txt'), mode='a')
+	    f.write('========================' + '\n')
+	    f.write(tool + ' ' + args + '\n')
             print '[*]\t', tool, args
-            #subprocess.call([tool, args], shell=True)
-            os.system(tool+' '+args)
+      	    r,log = commands.getstatusoutput(tool+' '+args)
+            f.write(log + '\n')
+            r,log = commands.getstatusoutput('readelf -l'+' '+target)
+            f.write(log + '\n')
+            f.write('========================' + '\n\n')
+            f.close()
         except BaseException, e:
             print e
         finally:
